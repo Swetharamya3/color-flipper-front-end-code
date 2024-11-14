@@ -34,5 +34,4 @@ jobs:
             cd /path/to/your/application
             git pull origin main
             npm install
-            pm2 restart your-app  # Restart the app using PM2
           EOF 
