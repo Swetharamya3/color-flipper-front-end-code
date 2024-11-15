@@ -1,4 +1,4 @@
-console.log("hi");
+console.log("new changes");
 let access=document.querySelector("button");
 let empty1=document.querySelector("#empty");
 access.addEventListener('click',(event)=>{
