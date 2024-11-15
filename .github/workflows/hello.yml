@@ -40,20 +40,15 @@ jobs:
           ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
             # Navigate to the directory where your web app code should be
             cd /var/www/html
-
-           if [ ! -d "/var/www/html/.git" ]; then
-            echo "This is not a git repository. Cloning..."
-
-           if [ -d "/var/www/html/color-flipper-front-end-code" ]; then
-               echo "Removing existing directory..."
-           rm -rf /var/www/html/color-flipper-front-end-code
+            if [ ! -d "color-flipper-front-end-code/.git" ]; then
+             echo "This is not a git repository. Cloning..."
+             git clone https://github.com/Swetharamya3/color-flipper-front-end-code.git  # Clone the repo
+           else
+              echo "Git repository found. Pulling latest changes..."
+              cd color-flipper-front-end-code
+              git pull origin main  # Pull the latest changes from the main branch
           fi
-          git clone https://github.com/Swetharamya3/color-flipper-front-end-code.git /var/www/html/color-flipper-front-end-code  # Clone the repo
-          else
-           echo "Git repository found. Pulling latest changes..."
-           cd /var/www/html/color-flipper-front-end-code
-           git pull origin main  # Pull the latest changes from the main branch
-          fi
+
             sudo chown -R apache:apache /var/www/html
 
             # Restart Apache to apply the changes
