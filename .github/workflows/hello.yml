@@ -45,10 +45,10 @@ jobs:
              server = smtplib.SMTP(smtp_server, smtp_port)
              server.starttls()  # Start TLS encryption
              server.login(sender_email, password)
-            text = message.as_string()
-            server.sendmail(sender_email, recipient_email, text)
-            server.quit()
-            print('Email sent successfully!')
-except Exception as e:
-    print(f'Error sending email: {e}')
-          "
+             text = message.as_string()
+             server.sendmail(sender_email, recipient_email, text)
+             server.quit()
+             print('Email sent successfully!')
+          except Exception as e:
+            print(f'Error sending email: {e}') "
+            
