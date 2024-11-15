@@ -21,7 +21,7 @@ jobs:
           aws-region: us-east-1
 
       - name: Install SSH client
-        run: sudo yum install -y openssh-client
+        run: sudo yum install -y openssh
 
       - name: Add SSH key to SSH agent
         run: |
