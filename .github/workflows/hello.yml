@@ -1,55 +1,40 @@
-name: Send Email on Push
+name: Deploy to AWS EC2
 
 on:
-  workflow_dispatch:
   push:
     branches:
-      - main  # Trigger on push to the main branch
+      - main
 
 jobs:
-  send_email:
-    runs-on: ubuntu-latest
-
+  deploy:
+    runs-on: self-hosted
+    
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
+      - name: Set up AWS credentials
+        uses: aws-actions/configure-aws-credentials@v2
         with:
-          python-version: '3.x'
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
 
-      - name: Install dependencies
+      - name: Install SSH client
+        run: sudo apt-get install -y openssh-client
+
+      - name: Add SSH key to SSH agent
         run: |
-          pip install secure-smtplib
-
-      - name: Send Email using SMTP
+          mkdir -p ~/.ssh
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
+          chmod 600 ~/.ssh/id_rsa
+      - name: Deploy to EC2
         run: |
-          python -c "
-          import smtplib
-          from email.mime.text import MIMEText
-          from email.mime.multipart import MIMEMultipart
-          smtp_server = 'smtp.gmail.com'
-          smtp_port = 587
-          sender_email = '${{ secrets.GMAIL_SENDER_EMAIL }}'
-          recipient_email = '${{ secrets.secrets.RECIPIENT_EMAIL }}'
-          password = '${{ secrets.GMAIL_APP_PASSWORD }}'  # Gmail App Password for better security
-          message = MIMEMultipart()
-          message['From'] = sender_email
-          message['To'] = recipient_email
-          message['Subject'] = 'GitHub Actions Notification'
-
-          body = 'This is a test email sent from GitHub Actions.'
-          message.attach(MIMEText(body, 'plain'))
-
-          try:
-             server = smtplib.SMTP(smtp_server, smtp_port)
-             server.starttls()  # Start TLS encryption
-             server.login(sender_email, password)
-             text = message.as_string()
-             server.sendmail(sender_email, recipient_email, text)
-             server.quit()
-             print('Email sent successfully!')
-          except Exception as e:
-            print(f'Error sending email: {e}') "
-            
+          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
+            cd ~/aws
+            git pull origin main
+            npm install
+            sudo mv * /var/www/html
+            sudo chown -R apache:apache /var/www/html
+            sudo systemctl restart httpd
+          EOF 
