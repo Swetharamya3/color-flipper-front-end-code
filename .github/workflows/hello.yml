@@ -31,7 +31,7 @@ jobs:
           smtp_server = 'smtp.gmail.com'
           smtp_port = 587
           sender_email = '${{ secrets.GMAIL_SENDER_EMAIL }}'
-          recipient_email = '${{ secrets.SENDGRID_RECIPIENT_EMAIL }}'
+          recipient_email = '${{ secrets.secrets.RECIPIENT_EMAIL }}'
           password = '${{ secrets.GMAIL_APP_PASSWORD }}'  # Gmail App Password for better security
           message = MIMEMultipart()
           message['From'] = sender_email
