@@ -25,35 +25,30 @@ jobs:
       - name: Send Email using SMTP
         run: |
           python -c "
-import smtplib
-from email.mime.text import MIMEText
-from email.mime.multipart import MIMEMultipart
+          import smtplib
+          from email.mime.text import MIMEText
+          from email.mime.multipart import MIMEMultipart
+          smtp_server = 'smtp.gmail.com'
+          smtp_port = 587
+          sender_email = '${{ secrets.GMAIL_SENDER_EMAIL }}'
+          recipient_email = '${{ secrets.SENDGRID_RECIPIENT_EMAIL }}'
+          password = '${{ secrets.GMAIL_APP_PASSWORD }}'  # Gmail App Password for better security
+          message = MIMEMultipart()
+          message['From'] = sender_email
+          message['To'] = recipient_email
+          message['Subject'] = 'GitHub Actions Notification'
 
-# SMTP server details
-smtp_server = 'smtp.gmail.com'
-smtp_port = 587
-sender_email = '${{ secrets.GMAIL_SENDER_EMAIL }}'
-recipient_email = '${{ secrets.SENDGRID_RECIPIENT_EMAIL }}'
-password = '${{ secrets.GMAIL_APP_PASSWORD }}'  # Gmail App Password for better security
+          body = 'This is a test email sent from GitHub Actions.'
+          message.attach(MIMEText(body, 'plain'))
 
-# Compose the email
-message = MIMEMultipart()
-message['From'] = sender_email
-message['To'] = recipient_email
-message['Subject'] = 'GitHub Actions Notification'
-
-body = 'This is a test email sent from GitHub Actions.'
-message.attach(MIMEText(body, 'plain'))
-
-# Send email via SMTP
-try:
-    server = smtplib.SMTP(smtp_server, smtp_port)
-    server.starttls()  # Start TLS encryption
-    server.login(sender_email, password)
-    text = message.as_string()
-    server.sendmail(sender_email, recipient_email, text)
-    server.quit()
-    print('Email sent successfully!')
+          try:
+             server = smtplib.SMTP(smtp_server, smtp_port)
+             server.starttls()  # Start TLS encryption
+             server.login(sender_email, password)
+            text = message.as_string()
+            server.sendmail(sender_email, recipient_email, text)
+            server.quit()
+            print('Email sent successfully!')
 except Exception as e:
     print(f'Error sending email: {e}')
           "
