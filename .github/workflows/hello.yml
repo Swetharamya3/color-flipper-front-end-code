@@ -3,42 +3,55 @@ name: Deploy to AWS EC2
 on:
   push:
     branches:
-      - main
+      - main  # Trigger the workflow on push to the `main` branch
 
 jobs:
   deploy:
-    runs-on: self-hosted
-    
+    runs-on: self-hosted  # Using a self-hosted runner for this deployment
+
     steps:
+      # Step 1: Checkout the code from the repository
       - name: Checkout code
         uses: actions/checkout@v3
 
+      # Step 2: Set up AWS credentials for access to AWS services
       - name: Set up AWS credentials
         uses: aws-actions/configure-aws-credentials@v2
         with:
           aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
           aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1
+          aws-region: us-east-1  # Specify the AWS region
 
+      # Step 3: Install SSH client if not already installed
       - name: Install SSH client
-        run: sudo yum install -y openssh
+        run: sudo yum install -y openssh git  # Make sure git is installed too
 
+      # Step 4: Add SSH key to the SSH agent for authenticating with EC2
       - name: Add SSH key to SSH agent
         run: |
           mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa
-          chmod 600 ~/.ssh/id_rsa
+          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa  # Store the SSH private key
+          chmod 600 ~/.ssh/id_rsa  # Set proper permissions for the SSH key
+
+      # Step 5: Deploy to EC2
       - name: Deploy to EC2
         run: |
           ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
+            # Navigate to the directory where your web app code should be
             cd /var/www/html
+
+            # Check if it is a Git repository
             if [ ! -d ".git" ]; then
-             echo "This is not a git repository. Cloning..."
-             git clone https://github.com/Swetharamya3/color-flipper-front-end-code.git
-           else
-             echo "Git repository found. Pulling latest changes..."
-             git pull origin main  # Pull latest changes from the git repository
-          fi
+              echo "This is not a git repository. Cloning..."
+              git clone https://github.com/Swetharamya3/color-flipper-front-end-code.git  # Clone the repo
+            else
+              echo "Git repository found. Pulling latest changes..."
+              git pull origin main  # Pull the latest changes from the main branch
+            fi
+
+            # Set ownership of files to apache user (to serve the files properly)
             sudo chown -R apache:apache /var/www/html
+
+            # Restart Apache to apply the changes
             sudo systemctl restart httpd
-          EOF 
+          EOF
