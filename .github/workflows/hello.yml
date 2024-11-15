@@ -1,6 +1,7 @@
 name: Send Email on Push
 
 on:
+  workflow_dispatch:
   push:
     branches:
       - main  # Trigger on push to the main branch
