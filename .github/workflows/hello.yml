@@ -45,8 +45,9 @@ jobs:
              git clone https://github.com/Swetharamya3/color-flipper-front-end-code.git  # Clone the repo
            else
               echo "Git repository found. Pulling latest changes..."
+              sudo chown -R ec2-user:ec2-user /var/www/html/color-flipper-front-end-code
               cd color-flipper-front-end-code
-              git pull origin main  # Pull the latest changes from the main branch
+              git pull origin main  
           fi
 
             sudo chown -R apache:apache /var/www/html
