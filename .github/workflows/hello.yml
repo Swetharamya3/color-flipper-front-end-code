@@ -1,57 +1,52 @@
-name: Deploy to AWS EC2
+name: Send Email on Push
 
 on:
   workflow_dispatch:
   push:
     branches:
-      - main  # Trigger the workflow on push to the `main` branch
+      - main  # Trigger on push to the main branch
 
 jobs:
-  deploy:
-    runs-on: self-hosted  # Using a self-hosted runner for this deployment
+  send_email:
+    runs-on: ubuntu-latest
 
     steps:
-      # Step 1: Checkout the code from the repository
       - name: Checkout code
         uses: actions/checkout@v3
 
-      # Step 2: Set up AWS credentials for access to AWS services
-      - name: Set up AWS credentials
-        uses: aws-actions/configure-aws-credentials@v2
+      - name: Set up Python
+        uses: actions/setup-python@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: us-east-1  # Specify the AWS region
+          python-version: '3.x'
 
-      # Step 3: Install SSH client if not already installed
-      - name: Install SSH client
-        run: sudo yum install -y openssh git  # Make sure git is installed too
-
-      # Step 4: Add SSH key to the SSH agent for authenticating with EC2
-      - name: Add SSH key to SSH agent
+      - name: Install dependencies
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.EC2_SSH_PRIVATE_KEY }}" > ~/.ssh/id_rsa  # Store the SSH private key
-          chmod 600 ~/.ssh/id_rsa  # Set proper permissions for the SSH key
-
-      # Step 5: Deploy to EC2
-      - name: Deploy to EC2
+          pip install secure-smtplib
+      - name: Send Email using SMTP
         run: |
-          ssh -o StrictHostKeyChecking=no ec2-user@${{ secrets.EC2_PUBLIC_IP }} << 'EOF'
-            # Navigate to the directory where your web app code should be
-            cd /var/www/html
-            if [ ! -d "color-flipper-front-end-code/.git" ]; then
-             echo "This is not a git repository. Cloning..."
-             git clone https://github.com/Swetharamya3/color-flipper-front-end-code.git  # Clone the repo
-           else
-              echo "Git repository found. Pulling latest changes..."
-              sudo chown -R ec2-user:ec2-user /var/www/html/color-flipper-front-end-code
-              cd color-flipper-front-end-code
-              git pull origin main  
-          fi
-
-            sudo chown -R apache:apache /var/www/html
-
-            # Restart Apache to apply the changes
-            sudo systemctl restart httpd
-          EOF
+          python -c "
+          import smtplib
+          from email.mime.text import MIMEText
+          from email.mime.multipart import MIMEMultipart
+          smtp_server = 'smtp.gmail.com'
+          smtp_port = 587
+          sender_email = '${{ secrets.GMAIL_SENDER_EMAIL }}'
+          recipient_email = '${{ secrets.secrets.RECIPIENT_EMAIL }}'
+          password = '${{ secrets.GMAIL_APP_PASSWORD }}'  # Gmail App Password for better security
+          message = MIMEMultipart()
+          message['From'] = sender_email
+          message['To'] = recipient_email
+          message['Subject'] = 'GitHub Actions Notification'
+          body = 'This is a test email sent from GitHub Actions.'
+          message.attach(MIMEText(body, 'plain'))
+          try:
+             server = smtplib.SMTP(smtp_server, smtp_port)
+             server.starttls()  # Start TLS encryption
+             server.login(sender_email, password)
+             text = message.as_string()
+             server.sendmail(sender_email, recipient_email, text)
+             server.quit()
+             print('Email sent successfully!')
+          except Exception as e:
+            print(f'Error sending email: {e}') "
+            
