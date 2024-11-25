@@ -1,0 +1,49 @@
+body{
+    margin: 0px;
+    padding: 0px;
+    box-sizing: border-box;
+}
+nav{
+    display: flex;
+    flex-direction: row;
+    justify-content: space-around;
+    align-items: normal;
+    font-family: 'Times New Roman', Times, serif;
+    font-weight: 800;
+    font-size: larger;
+    text-shadow: 2px 2px 7px ;
+    border: 3px;
+    border-style: double;
+    background-color: black;
+}
+nav p{
+    color: azure;
+}
+#first{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;
+    min-height: 60vh;
+    font-size: larger;  
+    font-family: 'Gill Sans', 'Gill Sans MT', Calibri, 'Trebuchet MS', sans-serif;
+    font-weight: bold;
+}
+#two{
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+    align-items: center;  
+    
+}
+div button{
+    color: black;
+    padding: 10px;
+    font-weight: bolder;
+    font-size: larger;
+    border-radius: 2rem;
+    border-width: 5px;
+}
+span{
+    margin-left: 5px;
+}
