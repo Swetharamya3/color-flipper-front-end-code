@@ -1,51 +1,28 @@
-name: Send Email on Push
+name: Deploy to GitHub Pages
 
 on:
-  workflow_dispatch:
   push:
     branches:
-      - main  # Trigger on push to the main branch
+      - main  # Deploy whenever the main branch is updated
+
+permissions:
+  contents: write  # Needed to push to gh-pages branch
 
 jobs:
-  send_email:
+  deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout code
-        uses: actions/checkout@v3
+    - name: Checkout code
+      uses: actions/checkout@v3
 
-      - name: Set up Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: '3.x'
+    - name: Set up Node.js (if using static site generators like Jekyll/Hugo)
+      uses: actions/setup-node@v3
+      with:
+        node-version: '16'
 
-      - name: Install dependencies
-        run: |
-          pip install secure-smtplib
-      - name: Send Email using SMTP
-        run: |
-          python -c "
-          import smtplib
-          from email.mime.text import MIMEText
-          from email.mime.multipart import MIMEMultipart
-          smtp_server = 'smtp.gmail.com'
-          smtp_port = 587
-          sender_email = '${{ secrets.GMAIL_SENDER_EMAIL }}'
-          recipient_email = '${{ secrets.GMAIL_RECEIVER_EMAIL }}'
-          password = '${{ secrets.GMAIL_APP_PASSWORD }}'  # Gmail App Password for better security
-          message = MIMEMultipart()
-          message['From'] = sender_email
-          message['To'] = recipient_email
-          message['Subject'] = 'GitHub Actions Notification'
-          body = 'This is a test email sent from GitHub Actions.'
-          message.attach(MIMEText(body, 'plain'))
-          try:
-             server = smtplib.SMTP(smtp_server, smtp_port)
-             server.starttls()  # Start TLS encryption
-             server.login(sender_email, password)
-             text = message.as_string()
-             server.sendmail(sender_email, recipient_email, text)
-             server.quit()
-             print('Email sent successfully!')
-          except Exception as e:
-            print(f'Error sending email: {e}') "
+    - name: Deploy to GitHub Pages
+      uses: peaceiris/actions-gh-pages@v4
+      with:
+        github_token: ${{ secrets.GITHUB_TOKEN }}  # Provided by GitHub Actions
+        publish_dir: ./  # Directory to deploy (update if necessary)
